@@ -9,6 +9,9 @@ edition = "2024"
 axum = "0.8.1"
 clap = { version = "4.5.27", features = ["derive"] }
 color-eyre = "0.6.3"
+dashmap = "6.1.0"
+derive_more = { version = "1.0.0", features = ["full"] }
+ordered-float = "4.6.0"
 tokio = { version = "1.43.0", features = ["full"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
