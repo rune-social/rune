@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",
+    "chart.js": "^4.4.7",
     "expo": "~52.0.27",
     "expo-constants": "~17.0.4",
     "expo-dev-client": "~5.0.10",
