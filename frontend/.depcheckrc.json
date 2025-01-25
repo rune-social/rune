@@ -1,0 +1,16 @@
+{
+  "ignores": [
+    "eslint",
+    "eslint-*",
+    "prettier",
+    "babel-*",
+    "@babel/*",
+    "typescript",
+    "expo-dev-client",
+    "react-native-safe-area-context",
+    "react-native-screens",
+    "react-dom",
+    "react-native-web",
+    "tailwindcss",
+  ]
+}
