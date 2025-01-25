@@ -26,3 +26,10 @@ jobs:
       - name: Run ESLint
         run: npm run lint
         working-directory: ./frontend
+  depcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run depcheck
+        working-directory: ./frontend
+        run: npx depcheck
