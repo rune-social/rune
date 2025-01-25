@@ -1,0 +1,17 @@
+name: eslint
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+jobs:
+  build:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install modules
+        run: npm i
+        working-directory: ./frontend
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: ./frontend
