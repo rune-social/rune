@@ -23,6 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy
       - run: cargo clippy -- -Dwarnings
   unittest:
     name: "cargo test"
@@ -40,3 +42,14 @@ jobs:
           files: ./core.lcov
           token: ${{ secrets.CODECOV_ORG_TOKEN }}
           fail_ci_if_error: true
+  deps:
+    name: "cargo udeps"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly
+      - uses: aig787/cargo-udeps-action@v1
+        with:
+          args: "--all-targets"
