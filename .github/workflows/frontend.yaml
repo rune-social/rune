@@ -26,3 +26,12 @@ jobs:
       - name: Run ESLint
         run: npm run lint
         working-directory: ./frontend
+  depcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run depcheck
+        uses: tj-actions/depcheck@v9
+        with:
+          dir: "./frontend"
+          ignores: "eslint,babel-*"
