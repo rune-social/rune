@@ -1,11 +1,22 @@
-name: eslint
+name: Frontend
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
 jobs:
-  build:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install modules
+        run: npm i
+        working-directory: ./frontend
+      - name: Run Prettier Check
+        run: npm run format:check
+        working-directory: ./frontend
+        
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
