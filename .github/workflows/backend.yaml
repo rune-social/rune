@@ -30,4 +30,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - run: cargo test --all-features
+      - uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Test and generate code coverage
+        run: cargo llvm-cov --lcov --output-path core.lcov --workspace --all-features
+
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./core.lcov
+          token: ${{ secrets.CODECOV_ORG_TOKEN }}
+          fail_ci_if_error: true
