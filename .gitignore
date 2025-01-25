@@ -1,0 +1,7 @@
+.sl/
+.vscode/
+.git/
+
+# Added by cargo
+
+/target
