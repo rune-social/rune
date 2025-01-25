@@ -4,7 +4,6 @@
 unstable_features = true
 max_width = 80
 use_small_heuristics = "Max"
-hard_tabs = true
 trailing_comma = "Never"
 hex_literal_case = "Upper"
 imports_layout = "HorizontalVertical"
