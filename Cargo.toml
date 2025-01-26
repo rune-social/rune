@@ -7,8 +7,13 @@ edition = "2024"
 
 [dependencies]
 axum = "0.8.1"
+btreelist = "0.5.0"
 clap = { version = "4.5.27", features = ["derive"] }
 color-eyre = "0.6.3"
+dashmap = "6.1.0"
+derive_more = { version = "1.0.0", features = ["full"] }
+ordered-float = "4.6.0"
+rand = "0.8.5"
 tokio = { version = "1.43.0", features = ["full"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
