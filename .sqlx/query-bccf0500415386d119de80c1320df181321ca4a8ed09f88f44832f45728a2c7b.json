@@ -1,0 +1,124 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT * FROM information_schema.processlist WHERE ID=connection_id()",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ID",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | UNSIGNED",
+          "max_size": 22
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "USER",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 128
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "HOST",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 1044
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "DB",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 256
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "COMMAND",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 64
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "TIME",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 8
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "STATE",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 256
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "INFO",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 786420
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "TIME_MS",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL",
+          "max_size": 22
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "ROWS_SENT",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | UNSIGNED",
+          "max_size": 22
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "ROWS_EXAMINED",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | UNSIGNED",
+          "max_size": 22
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "bccf0500415386d119de80c1320df181321ca4a8ed09f88f44832f45728a2c7b"
+}
