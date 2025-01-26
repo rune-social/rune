@@ -22,6 +22,8 @@ use tracing_subscriber::{Layer, layer::Context, registry::LookupSpan};
 pub struct SpanTimingsLayerStatistics {
     /// Number of times the span was entered-exited
     pub count: usize,
+    /// Number of samples retained
+    pub sample_count: usize,
     /// Total time spent in the span
     pub total: Duration,
     /// Minimum of "time spent in single enter-exit of this span"
@@ -37,6 +39,11 @@ pub struct SpanTimingsLayerStatistics {
 /// Wrapper around [`Instant`] to store the time a span was started
 struct StartedAt(Instant);
 
+/// Concurrent map storing span -> (count, samples)
+///
+/// where `samples` is duration -> count
+type SpanTimingsMap = DashMap<String, (usize, BTreeMap<Duration, usize>)>;
+
 /// [`tracing`] layer to collect execution timings of spans
 ///
 /// this layer stores a timestamp on every span enter event,
@@ -44,7 +51,7 @@ struct StartedAt(Instant);
 /// and stores it in a vec for every distinct span name
 pub struct SpanTimingsLayer {
     /// map of span names to their execution durations
-    span_timings: Arc<DashMap<String, BTreeMap<Duration, usize>>>,
+    span_timings: Arc<SpanTimingsMap>,
     /// max number of timing datapoints to store per span
     max_timing_datapoints_per_span: usize
 }
@@ -53,7 +60,7 @@ pub struct SpanTimingsLayer {
 ///
 /// `.clone()` is essentially an [`Arc::clone()`] thus cheap
 #[derive(Clone)]
-pub struct SpanTimingsPtr(Arc<DashMap<String, BTreeMap<Duration, usize>>>);
+pub struct SpanTimingsPtr(Arc<SpanTimingsMap>);
 
 impl SpanTimingsPtr {
     /// Get the map containing [`SpanTimingsLayerStatistics`] for each spans
@@ -68,17 +75,20 @@ impl SpanTimingsPtr {
             .filter_map(|kv| {
                 let (name, timings) = kv.pair();
 
-                let count = timings.iter().fold(0, |acc, (_, c)| acc + *c);
+                let sample_count =
+                    timings.1.iter().fold(0, |acc, (_, c)| acc + *c);
                 let total = timings
+                    .1
                     .iter()
                     .fold(Duration::ZERO, |acc, (d, c)| acc + *d * *c as u32);
 
                 Some((name.clone(), SpanTimingsLayerStatistics {
-                    count,
+                    count: timings.0,
+                    sample_count,
                     total,
-                    min: *timings.keys().min()?,
-                    avg: total / count as u32,
-                    max: *timings.keys().max()?,
+                    min: *timings.1.keys().min()?,
+                    avg: total / sample_count as u32,
+                    max: *timings.1.keys().max()?,
                     percentiles: percentiles
                         .iter()
                         .filter_map(|&p| {
@@ -86,9 +96,10 @@ impl SpanTimingsPtr {
                             if *p < 0.0 || *p >= 100.0 {
                                 return None;
                             }
-                            let idx =
-                                (count as f64 * *p / 100.0).floor() as usize;
+                            let idx = (sample_count as f64 * *p / 100.0).floor()
+                                as usize;
                             timings
+                                .1
                                 .iter()
                                 .fold((None, 0), |(found, cur), (d, c)| {
                                     let cur = cur + *c;
@@ -123,8 +134,7 @@ impl SpanTimingsLayer {
     /// tracing_subscriber::registry().with(layer.with_filter(EnvFilter::new(format!("{}=info", env!("CARGO_PKG_NAME"))))).init();
     /// ```
     pub fn new(max_timings_per_span: usize) -> (Self, SpanTimingsPtr) {
-        let span_timings: Arc<DashMap<String, BTreeMap<Duration, usize>>> =
-            Arc::new(DashMap::new());
+        let span_timings: Arc<SpanTimingsMap> = Arc::new(DashMap::new());
 
         (
             Self {
@@ -170,11 +180,11 @@ where
                 .entry(span.metadata().name().to_string())
                 .or_default();
             if self.max_timing_datapoints_per_span != 0
-                && timings.iter().fold(0, |acc, (_, c)| acc + *c)
+                && timings.1.iter().fold(0, |acc, (_, c)| acc + *c)
                     >= self.max_timing_datapoints_per_span
             {
-                let to_remove = if 1 < timings.len() - 1 {
-                    thread_rng().gen_range(1..(timings.len() - 1))
+                let to_remove = if 1 < timings.1.len() - 1 {
+                    thread_rng().gen_range(1..(timings.1.len() - 1))
                 } else {
                     0
                 };
@@ -182,19 +192,21 @@ where
                     clippy::unwrap_used,
                     reason = "to_remove is always in bounds"
                 )]
-                let target_key = *timings.keys().nth(to_remove).unwrap();
+                let target_key = *timings.1.keys().nth(to_remove).unwrap();
                 #[allow(
                     clippy::unwrap_used,
                     reason = "target_key always exists"
                 )]
-                let target_value = timings.get_mut(&target_key).unwrap();
+                let target_value = timings.1.get_mut(&target_key).unwrap();
                 if *target_value == 1 {
-                    timings.remove(&target_key);
+                    timings.1.remove(&target_key);
                 } else {
                     *target_value -= 1;
                 }
             }
+            timings.0 += 1;
             timings
+                .1
                 .entry(now - started_at.0)
                 .and_modify(|c| *c += 1)
                 .or_insert(1);
@@ -236,6 +248,7 @@ mod tests {
         assert_eq!(stats.len(), 1);
         let stat = stats.get("foo_span").unwrap();
         assert_eq!(stat.count, 10);
+        assert_eq!(stat.sample_count, 10);
         assert_eq!(stat.percentiles.keys().cloned().collect::<Vec<_>>(), vec![
             NotNan::new(0.0).unwrap(),
             NotNan::new(50.0).unwrap(),
@@ -255,14 +268,16 @@ mod tests {
         let stats = ptr.get_statistics(&[-1.0, 0.0, 50.0, 99.9, 100.0]);
         assert_eq!(stats.len(), 2);
         let stat = stats.get("foo_span").unwrap();
-        assert_eq!(stat.count, 1);
+        assert_eq!(stat.count, 10);
+        assert_eq!(stat.sample_count, 1);
         assert_eq!(stat.percentiles.keys().cloned().collect::<Vec<_>>(), vec![
             NotNan::new(0.0).unwrap(),
             NotNan::new(50.0).unwrap(),
             NotNan::new(99.9).unwrap()
         ]);
         let stat = stats.get("bar_span").unwrap();
-        assert_eq!(stat.count, 1);
+        assert_eq!(stat.count, 10);
+        assert_eq!(stat.sample_count, 1);
 
         // test bounded timings rand drop
         let (layer, ptr) = SpanTimingsLayer::new(10);
@@ -275,6 +290,7 @@ mod tests {
         let stats = ptr.get_statistics(&[50.0]);
         assert_eq!(stats.len(), 1);
         let stat = stats.get("foo_span").unwrap();
-        assert_eq!(stat.count, 10);
+        assert_eq!(stat.count, 100);
+        assert_eq!(stat.sample_count, 10);
     }
 }
