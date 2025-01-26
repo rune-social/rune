@@ -248,6 +248,7 @@ mod tests {
         assert_eq!(stats.len(), 1);
         let stat = stats.get("foo_span").unwrap();
         assert_eq!(stat.count, 10);
+        assert_eq!(stat.sample_count, 10);
         assert_eq!(stat.percentiles.keys().cloned().collect::<Vec<_>>(), vec![
             NotNan::new(0.0).unwrap(),
             NotNan::new(50.0).unwrap(),
@@ -267,14 +268,16 @@ mod tests {
         let stats = ptr.get_statistics(&[-1.0, 0.0, 50.0, 99.9, 100.0]);
         assert_eq!(stats.len(), 2);
         let stat = stats.get("foo_span").unwrap();
-        assert_eq!(stat.count, 1);
+        assert_eq!(stat.count, 10);
+        assert_eq!(stat.sample_count, 1);
         assert_eq!(stat.percentiles.keys().cloned().collect::<Vec<_>>(), vec![
             NotNan::new(0.0).unwrap(),
             NotNan::new(50.0).unwrap(),
             NotNan::new(99.9).unwrap()
         ]);
         let stat = stats.get("bar_span").unwrap();
-        assert_eq!(stat.count, 1);
+        assert_eq!(stat.count, 10);
+        assert_eq!(stat.sample_count, 1);
 
         // test bounded timings rand drop
         let (layer, ptr) = SpanTimingsLayer::new(10);
@@ -287,6 +290,7 @@ mod tests {
         let stats = ptr.get_statistics(&[50.0]);
         assert_eq!(stats.len(), 1);
         let stat = stats.get("foo_span").unwrap();
-        assert_eq!(stat.count, 10);
+        assert_eq!(stat.count, 100);
+        assert_eq!(stat.sample_count, 10);
     }
 }
