@@ -123,24 +123,29 @@ async fn main() -> Result<()> {
         .route(
             "/test/db_connection",
             get(move |State(pool): State<MySqlPool>| async move {
-                let socket_info = sqlx::query!("SELECT * FROM information_schema.processlist WHERE ID=connection_id()")
-                    .fetch_one(&pool)
-                    .instrument(info_span!("query_processlist"))
-                    .await
-                    .inspect_err(|e| error!(error = %e, debug = ?e))
-                    .map_err(|_| {
-                        (
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            "Internal Server Error"
-                        )
-                    })?;
-
-                Ok::<_, (StatusCode, &'static str)>(
-                    format!("{:#?}", socket_info)
+                let socket_info = sqlx::query!(
+                    "SELECT *
+                    FROM information_schema.processlist
+                    WHERE ID=connection_id()"
                 )
+                .fetch_one(&pool)
+                .instrument(info_span!("query_processlist"))
+                .await
+                .inspect_err(|e| error!(error = %e, debug = ?e))
+                .map_err(|_| {
+                    (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
+                })?;
+
+                Ok::<_, (StatusCode, &'static str)>(format!(
+                    "{:#?}",
+                    socket_info
+                ))
             })
         )
-        .fallback_service(ServeDir::new(path).not_found_service(ServeFile::new(path.join("index.html"))))
+        .fallback_service(
+            ServeDir::new(path)
+                .not_found_service(ServeFile::new(path.join("index.html")))
+        )
         .with_state(pool);
 
     let listener =
