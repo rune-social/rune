@@ -37,3 +37,6 @@ yarn-error.*
 
 # editor
 .vscode/
+
+# jest
+coverage/
