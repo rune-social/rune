@@ -3,6 +3,8 @@
 # see here for available rules: https://rust-lang.github.io/rustfmt/
 unstable_features = true
 max_width = 80
+error_on_line_overflow = true
+error_on_unformatted = true
 use_small_heuristics = "Max"
 trailing_comma = "Never"
 hex_literal_case = "Upper"
