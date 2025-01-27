@@ -1,6 +1,6 @@
 {
   "db_name": "MySQL",
-  "query": "SELECT * FROM information_schema.processlist WHERE ID=connection_id()",
+  "query": "SELECT *\n                    FROM information_schema.processlist\n                    WHERE ID=connection_id()",
   "describe": {
     "columns": [
       {
@@ -120,5 +120,5 @@
       false
     ]
   },
-  "hash": "bccf0500415386d119de80c1320df181321ca4a8ed09f88f44832f45728a2c7b"
+  "hash": "c997109edb8a401ab4e7f39b9e39a4adbf4c5d05ea3e89d39815d8efdd317bc5"
 }
