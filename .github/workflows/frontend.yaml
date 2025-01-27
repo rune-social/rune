@@ -15,7 +15,6 @@ jobs:
       - name: Run Prettier Check
         run: npm run format:check
         working-directory: ./frontend
-        
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -33,3 +32,19 @@ jobs:
       - name: Run depcheck
         working-directory: ./frontend
         run: npx depcheck
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install modules
+        run: npm i
+        working-directory: ./frontend
+      - name: Run test
+        run: npm run test
+        working-directory: ./frontend
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          directory: ./frontend
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_ORG_TOKEN }}

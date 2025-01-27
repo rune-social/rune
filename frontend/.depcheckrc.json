@@ -2,6 +2,7 @@
   "ignores": [
     "eslint",
     "eslint-*",
+    "jest",
     "prettier",
     "babel-*",
     "@babel/*",
