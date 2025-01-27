@@ -20,10 +20,18 @@ use std::{
     path::Path
 };
 
-use axum::{Router, extract::State, http::StatusCode, routing::get};
+use axum::{
+    Router,
+    body::Body,
+    extract::{Request, State},
+    http::StatusCode,
+    response::Response,
+    routing::get
+};
 use clap::Parser;
 use color_eyre::eyre::{Result, eyre};
 use logging::SpanTimingsLayer;
+use reqwest::Client;
 use sqlx::MySqlPool;
 use tokio::net::TcpListener;
 use tower_http::services::{ServeDir, ServeFile};
@@ -54,7 +62,10 @@ struct Args {
     /// Max instrumenting datapoints to keep per span.
     /// Set to 0 to not keep any
     #[clap(long, default_value_t = 1000)]
-    num_max_instrument_points: usize
+    num_max_instrument_points: usize,
+    /// Use reverse proxy instead of serving SERVE_DIR.
+    #[clap(long, default_value_t = false)]
+    reverse_proxy: bool
 }
 
 #[tokio::main]
@@ -92,14 +103,6 @@ async fn main() -> Result<()> {
 
     // setup database
     let pool = db::init(&env::var("DATABASE_URL")?).await?;
-
-    // get dist file from env
-    let env_serve_dir =
-        env::var("SERVE_DIR").unwrap_or_else(|_| DEFAULT_SERVE_DIR.to_string());
-    let path = Path::new(&env_serve_dir);
-    if !path.is_dir() {
-        return Err(eyre!("Path {:#?} is not a valid directory.", &path));
-    }
 
     // build server with a route
     let server = Router::new()
@@ -142,11 +145,55 @@ async fn main() -> Result<()> {
                 ))
             })
         )
-        .fallback_service(
+        .with_state(pool);
+
+    // add route for serving frontend (reverse_proxy or static)
+    let server = if args.reverse_proxy {
+        let client = Client::new();
+        server.fallback(move |req: Request| async move {
+            let path = req.uri().path();
+            let path_query =
+                req.uri().path_and_query().map(|v| v.as_str()).unwrap_or(path);
+
+            let uri = format!("http://127.0.0.1:8081{}", path_query);
+
+            let reqwest_response =
+                client.get(uri).send().await.map_err(|_| {
+                    (
+                        StatusCode::SERVICE_UNAVAILABLE,
+                        "Expo Dev Server Error. Try restarting expo?"
+                    )
+                })?;
+
+            let mut response_builder =
+                Response::builder().status(reqwest_response.status());
+            let headers = response_builder.headers_mut().ok_or((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal Server Error"
+            ))?;
+            *headers = reqwest_response.headers().clone();
+
+            let body = response_builder
+                .body(Body::from_stream(reqwest_response.bytes_stream()))
+                .map_err(|_| {
+                    (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
+                })?;
+
+            Ok::<_, (StatusCode, &'static str)>(body)
+        })
+    } else {
+        // get dist file from env
+        let env_serve_dir = env::var("SERVE_DIR")
+            .unwrap_or_else(|_| DEFAULT_SERVE_DIR.to_string());
+        let path = Path::new(&env_serve_dir);
+        if !path.is_dir() {
+            return Err(eyre!("Path {:#?} is not a valid directory.", &path));
+        }
+        server.fallback_service(
             ServeDir::new(path)
                 .not_found_service(ServeFile::new(path.join("index.html")))
         )
-        .with_state(pool);
+    };
 
     let listener =
         TcpListener::bind(SocketAddr::new(args.bind_address.into(), args.port))
