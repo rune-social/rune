@@ -25,6 +25,7 @@ use color_eyre::eyre::Result;
 use logging::SpanTimingsLayer;
 use sqlx::MySqlPool;
 use tokio::net::TcpListener;
+use tower_http::services::{ServeDir, ServeFile};
 use tracing::*;
 use tracing_subscriber::{
     EnvFilter,
@@ -88,12 +89,28 @@ async fn main() -> Result<()> {
     // setup database
     let pool = db::init(&env::var("DATABASE_URL")?).await?;
 
+    let default_serve_dir = "frontend/dist";
+
+    // get dist file from env
+    let env_serve_dir =
+        env::var("SERVE_DIR").unwrap_or(default_serve_dir.to_owned());
+
+    let path = std::path::Path::new(&env_serve_dir);
+
+    let serve_dir = if path.exists() && path.is_dir() {
+        path.to_str().unwrap_or(default_serve_dir)
+    } else {
+        default_serve_dir
+    };
+
+    // serve frontend/dist and fallback to index.html
+    let serve_dir = ServeDir::new(serve_dir).not_found_service(ServeFile::new(
+        serve_dir.to_owned() + "/index.html"
+    ));
+
     // build server with a route
     let server = Router::new()
-        .route(
-            "/",
-            get(|| async { "Hello, world!" }.instrument(info_span!("/")))
-        )
+        .fallback_service(serve_dir)
         .route(
             "/test/timings",
             get(move || {
