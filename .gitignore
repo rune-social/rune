@@ -1,6 +1,7 @@
 .sl/
 .vscode/
 .git/
+.env
 
 # Added by cargo
 
