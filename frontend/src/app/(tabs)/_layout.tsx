@@ -13,6 +13,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="about"
+        options={{
+          title: "About",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol name="house.fill" size={32} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
