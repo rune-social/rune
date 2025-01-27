@@ -11,8 +11,18 @@ clap = { version = "4.5.27", features = ["derive"] }
 color-eyre = "0.6.3"
 dashmap = "6.1.0"
 derive_more = { version = "1.0.0", features = ["full"] }
+dotenvy = "0.15.7"
+num_cpus = "1.16.0"
 ordered-float = "4.6.0"
 rand = "0.8.5"
+sqlx = { version = "0.8.3", features = [
+    "runtime-tokio",
+    "tls-rustls-ring-native-roots",
+    "mysql",
+    "derive",
+    "macros",
+    "migrate",
+] }
 tokio = { version = "1.43.0", features = ["full"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
