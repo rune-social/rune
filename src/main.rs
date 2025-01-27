@@ -16,15 +16,17 @@
 
 use std::{
     env,
-    net::{Ipv4Addr, SocketAddr}
+    net::{Ipv4Addr, SocketAddr},
+    path::Path
 };
 
 use axum::{Router, extract::State, http::StatusCode, routing::get};
 use clap::Parser;
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{Result, eyre};
 use logging::SpanTimingsLayer;
 use sqlx::MySqlPool;
 use tokio::net::TcpListener;
+use tower_http::services::{ServeDir, ServeFile};
 use tracing::*;
 use tracing_subscriber::{
     EnvFilter,
@@ -36,6 +38,9 @@ use tracing_subscriber::{
 
 mod db;
 mod logging;
+
+/// default directory to serve compiled frontend code.
+const DEFAULT_SERVE_DIR: &str = "frontend/dist";
 
 /// Rune Server
 #[derive(Debug, Parser)]
@@ -88,12 +93,16 @@ async fn main() -> Result<()> {
     // setup database
     let pool = db::init(&env::var("DATABASE_URL")?).await?;
 
+    // get dist file from env
+    let env_serve_dir =
+        env::var("SERVE_DIR").unwrap_or_else(|_| DEFAULT_SERVE_DIR.to_string());
+    let path = Path::new(&env_serve_dir);
+    if !path.is_dir() {
+        return Err(eyre!("Path {:#?} is not a valid directory.", &path));
+    }
+
     // build server with a route
     let server = Router::new()
-        .route(
-            "/",
-            get(|| async { "Hello, world!" }.instrument(info_span!("/")))
-        )
         .route(
             "/test/timings",
             get(move || {
@@ -131,6 +140,7 @@ async fn main() -> Result<()> {
                 )
             })
         )
+        .fallback_service(ServeDir::new(path).not_found_service(ServeFile::new(path.join("index.html"))))
         .with_state(pool);
 
     let listener =
