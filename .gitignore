@@ -1,6 +1,8 @@
 .sl/
 .vscode/
 .git/
+.env
+db.sqlite3
 
 # Added by cargo
 
