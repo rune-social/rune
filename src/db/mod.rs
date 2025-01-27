@@ -11,12 +11,12 @@ use tracing::log::LevelFilter;
 
 /// Initialize the database connection.
 pub async fn init(database_url: &str) -> Result<MySqlPool, Error> {
+    // pipes_as_concat: we won't use this, and PlanetScale's MySQL distribution
+    // breaks with this enabled
     let conn_opts = MySqlConnectOptions::from_str(database_url)?
         .ssl_mode(MySqlSslMode::Required)
         .charset("utf8mb4")
-        // We won't use this, and PlanetScale's MySQL distribution breaks with this enabled
         .pipes_as_concat(false)
-        // We will also not use `TIMESTAMP`/`DATETIME` type at all, but still set this to UTC
         .timezone(String::from("+00:00"));
 
     MySqlPoolOptions::new()

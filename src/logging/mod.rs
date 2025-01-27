@@ -121,17 +121,24 @@ impl SpanTimingsPtr {
 impl SpanTimingsLayer {
     /// Create a new [`SpanTimingsLayer`]
     ///
-    /// `max_timings_per_span` is the maximum number of timing datapoints to store per span
+    /// `max_timings_per_span` is the maximum number of timing datapoints
+    /// to store per span
     ///
-    /// if `max_timings_per_span` is 0, there will be no limit (not recommended for long-running programs)
+    /// if `max_timings_per_span` is 0, there will be no limit
+    /// (not recommended for long-running programs)
     ///
     /// once the limit is reached, a random datapoint will be removed
     ///
-    /// highly recommended to run with [`tracing_subscriber::EnvFilter`] to limit the number of spans,
-    /// otherwise the memory usage can grow significantly
+    /// highly recommended to run with [`tracing_subscriber::EnvFilter`]
+    /// to limit the number of spans, otherwise the memory usage
+    /// can grow significantly
     /// ```rust
     /// let (layer, _) = SpanTimingsLayer::new(100);
-    /// tracing_subscriber::registry().with(layer.with_filter(EnvFilter::new(format!("{}=info", env!("CARGO_PKG_NAME"))))).init();
+    /// tracing_subscriber::registry().with(
+    ///   layer.with_filter(
+    ///     EnvFilter::new(format!("{}=info", env!("CARGO_PKG_NAME")))
+    ///   )
+    /// ).init();
     /// ```
     pub fn new(max_timings_per_span: usize) -> (Self, SpanTimingsPtr) {
         let span_timings: Arc<SpanTimingsMap> = Arc::new(DashMap::new());
