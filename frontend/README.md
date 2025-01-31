@@ -62,6 +62,7 @@ We encourage you to use Visual Studio Code to contribute to rune.
 Also using the following extensions would help you follow our code convention:
 
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
+  - If you encounter the `eslint-import/no-unresolved` problem, specify `"eslint.workingDirectories": ["./frontend/"]` in your vscode settings.json.
 - [PostCSS Language Support](https://marketplace.visualstudio.com/items?itemName=csstools.postcss)
 - [Prettier - Code Formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 - [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
