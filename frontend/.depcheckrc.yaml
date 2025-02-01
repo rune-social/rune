@@ -1,0 +1,18 @@
+ignores:
+  # dependencies
+  - react-dom
+  - expo-dev-client
+  - react-native-safe-area-context
+  - react-native-screens
+  - react-native-web
+  - tailwindcss
+  # devDependencies
+  - \@babel/core
+  - eslint
+  - eslint-config-expo
+  - eslint-config-prettier
+  - eslint-plugin-prettier
+  - jest
+  - prettier
+  - prettier-plugin-organize-imports
+  - typescript
