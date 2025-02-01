@@ -1,3 +1,5 @@
 ignore:
   - "src/main.rs"
+  - "src/schema.rs"
   - "src/db/mod.rs"
+  - "src/models/mod.rs"
