@@ -1,10 +1,10 @@
 // This file is a fallback for using on Android and web.
 
+import iconMap from "@/src/constants/iconMap";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { SymbolWeight } from "expo-symbols";
 import React from "react";
 import { OpaqueColorValue, StyleProp, TextStyle } from "react-native";
-import iconMap from "@/src/constants/iconMap";
 
 export type IconSymbolName = keyof typeof iconMap;
 
