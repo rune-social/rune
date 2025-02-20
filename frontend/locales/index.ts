@@ -1,8 +1,8 @@
-import i18n from "i18next";
 import translationEN from "@/locales/en/translation.json";
 import translationKO from "@/locales/ko/translation.json";
-import { initReactI18next } from "react-i18next";
 import languageDetector from "@/locales/languageDetector";
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
 
 const resources = {
   en: { translation: translationEN },
