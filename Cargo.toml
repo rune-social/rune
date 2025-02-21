@@ -28,6 +28,9 @@ tower-http = { version = "0.6.2", features = ["fs", "trace"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 reqwest = { version = "0.12.12", features = ["stream"] }
+opentelemetry = "0.27.1"
+opentelemetry-otlp = { version = "0.27.0", features = ["http", "http-proto", "reqwest-client"] }
+opentelemetry_sdk = { version = "0.27.1", features = ["rt-tokio"] }
 
 [profile.release]
 lto = true

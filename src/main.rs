@@ -17,7 +17,8 @@
 use std::{
     env,
     net::{Ipv4Addr, SocketAddr},
-    path::Path
+    path::Path,
+    time::Duration
 };
 
 use axum::{
@@ -31,6 +32,8 @@ use axum::{
 use clap::Parser;
 use color_eyre::eyre::{Result, eyre};
 use logging::SpanTimingsLayer;
+use opentelemetry::trace::{Span, Tracer};
+use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use reqwest::Client;
 use sqlx::MySqlPool;
 use tokio::net::TcpListener;
@@ -79,6 +82,20 @@ async fn main() -> Result<()> {
     // setup panic handler
     color_eyre::install()?;
 
+    // setup opentelemetry
+    let otlp_span_exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_http()
+        .with_timeout(Duration::from_secs(3))
+        .with_http_client(Client::new())
+        .build()?;
+    let tracer_provider = opentelemetry_sdk::trace::TracerProvider::builder()
+        .with_batch_exporter(
+            otlp_span_exporter,
+            opentelemetry_sdk::runtime::Tokio
+        )
+        .build();
+    opentelemetry::global::set_tracer_provider(tracer_provider);
+
     // setup logging
     let env_filter =
         EnvFilter::new(env::var("RUST_LOG").unwrap_or_else(|_| {
@@ -110,6 +127,9 @@ async fn main() -> Result<()> {
             "/test/timings",
             get(move || {
                 async move {
+                    let tracer = opentelemetry::global::tracer("rune/server");
+                    let mut span = tracer.start("/test/timings");
+                    span.add_event("show timings", vec![]);
                     if let Some(span_timings_ptr) = span_timings_ptr {
                         format!(
                             "{:#?}",
@@ -120,7 +140,7 @@ async fn main() -> Result<()> {
                         "Span timings not enabled".to_string()
                     }
                 }
-                .instrument(info_span!("/debug"))
+                .instrument(info_span!("/test/timings"))
             })
         )
         .route(
