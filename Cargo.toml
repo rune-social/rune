@@ -15,19 +15,14 @@ dotenvy = "0.15.7"
 num_cpus = "1.16.0"
 ordered-float = "4.6.0"
 rand = "0.8.5"
-sqlx = { version = "0.8.3", features = [
-    "runtime-tokio",
-    "tls-rustls-ring-native-roots",
-    "mysql",
-    "derive",
-    "macros",
-    "migrate",
-] }
 tokio = { version = "1.43.0", features = ["full"] }
 tower-http = { version = "0.6.2", features = ["fs", "trace"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 reqwest = { version = "0.12.12", features = ["stream"] }
+diesel = { version = "2.2.7", features = ["postgres", "extras"] }
+chrono = "0.4.39"
+deadpool-diesel = { version = "0.6.1", features = ["postgres"] }
 
 [profile.release]
 lto = true
